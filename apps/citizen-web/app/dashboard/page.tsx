@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const services = [
   ["Digital Vault", "View your verified and demo credentials", "/dashboard/vault"],
+  ["Government Services", "Discover available services and requirements", "/dashboard/services"],
   ["Transport Renewal", "Start or track a vehicle/licence renewal", "/dashboard/services/transport"],
   ["Payments", "Review obligations and payment status", "/dashboard/payments"],
   ["Consent", "Control who can access your data", "/dashboard/consent"],
@@ -10,6 +11,7 @@ const services = [
 
 const quickActions = [
   ["View credentials", "/dashboard/vault"],
+  ["Browse services", "/dashboard/services"],
   ["Renew transport document", "/dashboard/services/transport"],
   ["Review consent", "/dashboard/consent"]
 ] as const;
