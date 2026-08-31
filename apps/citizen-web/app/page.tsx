@@ -1,0 +1,1 @@
+export default function Home() { return <main><h1>CitizenOS Nepal</h1><p>Citizen digital public infrastructure prototype.</p><p>Status: foundation implementation in progress.</p></main>; }
