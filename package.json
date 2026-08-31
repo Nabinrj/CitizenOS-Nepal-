@@ -1,18 +1,1 @@
-{
-  "name": "citizenos-nepal",
-  "private": true,
-  "version": "0.1.0",
-  "packageManager": "pnpm@10.0.0",
-  "scripts": {
-    "dev": "pnpm --parallel --stream dev",
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
-    "format": "prettier --write .",
-    "db:up": "docker compose -f infra/docker-compose.yml up -d",
-    "db:down": "docker compose -f infra/docker-compose.yml down"
-  },
-  "devDependencies": {
-    "prettier": "^3.4.2"
-  }
-}
+{"name":"citizenos-nepal","private":true,"version":"0.1.0","packageManager":"pnpm@10.0.0","scripts":{"dev":"pnpm --parallel --stream dev","build":"pnpm -r build","test":"pnpm -r test","lint":"pnpm -r lint","format":"prettier --write .","db:up":"docker compose -f infra/docker-compose.yml up -d","db:down":"docker compose -f infra/docker-compose.yml down"},"devDependencies":{"prettier":"^3.4.2"}}
