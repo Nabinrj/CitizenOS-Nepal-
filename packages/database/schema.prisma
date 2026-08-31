@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus { ACTIVE SUSPENDED DISABLED }
+enum ConsentStatus { GRANTED DENIED REVOKED EXPIRED }
+enum CredentialStatus { ACTIVE EXPIRED REVOKED SUSPENDED UNKNOWN }
+enum WorkflowStatus { DRAFT VALIDATING AWAITING_CONSENT ELIGIBILITY_CHECK AWAITING_PAYMENT PAYMENT_CONFIRMED AGENCY_PROCESSING COMPLETED PAYMENT_FAILED RECONCILIATION_REQUIRED AGENCY_UNAVAILABLE MANUAL_REVIEW REJECTED CANCELLED }
+enum PaymentStatus { CREATED PENDING CONFIRMED FAILED EXPIRED REFUNDED RECONCILIATION_REQUIRED }
+
+model User {
+  id                String            @id @default(uuid()) @db.Uuid
+  email             String?           @unique
+  displayName       String
+  preferredLanguage String            @default("en")
+  status            UserStatus        @default(ACTIVE)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  consents          ConsentGrant[]
+  credentials       Credential[]
+  workflows         ServiceWorkflow[]
+  payments          PaymentIntent[]
+  auditEvents       AuditEvent[]
+}
+
+model ConsentGrant {
+  id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @db.Uuid
+  requesterId    String
+  purposeCode    String
+  resourceScope  Json
+  status         ConsentStatus @default(GRANTED)
+  grantedAt      DateTime      @default(now())
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, purposeCode, status])
+}
+
+model Credential {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  type           String
+  issuerId       String
+  issuerName     String
+  status         CredentialStatus @default(UNKNOWN)
+  issuedAt       DateTime?
+  expiresAt      DateTime?
+  sourceReference String?
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, type, status])
+}
+
+model ServiceWorkflow {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @db.Uuid
+  serviceType    String
+  status         WorkflowStatus @default(DRAFT)
+  idempotencyKey String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events         WorkflowEvent[]
+  payments       PaymentIntent[]
+  @@unique([userId, idempotencyKey])
+  @@index([userId, serviceType, status])
+}
+
+model WorkflowEvent {
+  id         String          @id @default(uuid()) @db.Uuid
+  workflowId String          @db.Uuid
+  fromStatus WorkflowStatus?
+  toStatus   WorkflowStatus
+  type       String
+  payload    Json?
+  createdAt  DateTime        @default(now())
+  workflow   ServiceWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  @@index([workflowId, createdAt])
+}
+
+model PaymentIntent {
+  id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @db.Uuid
+  workflowId     String        @db.Uuid
+  obligationId   String
+  provider       String
+  amount         Decimal       @db.Decimal(14, 2)
+  currency       String        @default("NPR")
+  status         PaymentStatus @default(CREATED)
+  idempotencyKey String
+  providerReference String?
+  createdAt      DateTime      @default(now())
+  confirmedAt    DateTime?
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workflow       ServiceWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  events         PaymentEvent[]
+  @@unique([userId, idempotencyKey])
+}
+
+model PaymentEvent {
+  id              String        @id @default(uuid()) @db.Uuid
+  paymentIntentId String        @db.Uuid
+  providerEventId String        @unique
+  type            String
+  verified        Boolean       @default(false)
+  payloadHash     String?
+  createdAt       DateTime      @default(now())
+  paymentIntent   PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
+}
+
+model AuditEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  actorType     String
+  actorId       String?
+  userId        String?  @db.Uuid
+  action        String
+  resourceType  String
+  resourceId    String?
+  purposeCode   String?
+  outcome       String
+  correlationId String?
+  createdAt     DateTime @default(now())
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([userId, createdAt])
+  @@index([correlationId])
+}
