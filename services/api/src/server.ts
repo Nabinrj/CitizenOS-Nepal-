@@ -10,6 +10,8 @@ import { registerAuditRoutes } from "./modules/audit/routes.js";
 import { registerErrorHandling } from "./plugins/errors.js";
 import { registerAuth } from "./plugins/auth.js";
 import { registerAuthRoutes } from "./modules/auth/routes.js";
+import { registerCredentialRoutes } from "./modules/credentials/routes.js";
+import { registerVerificationRoutes } from "./modules/verification/routes.js";
 
 const app = Fastify({ logger: true });
 registerErrorHandling(app);
@@ -29,6 +31,8 @@ app.get("/v1", async () => ({
 
 await registerHealthRoutes(app);
 await registerAuthRoutes(app);
+await registerCredentialRoutes(app);
+await registerVerificationRoutes(app);
 await registerCitizenRoutes(app);
 await registerConsentRoutes(app);
 await registerWorkflowRoutes(app);
