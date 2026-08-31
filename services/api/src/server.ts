@@ -15,6 +15,7 @@ import { registerVerificationRoutes } from "./modules/verification/routes.js";
 import { registerTransportRoutes } from "./modules/transport/routes.js";
 import { registerTransportPaymentRoutes } from "./modules/transport/payment-routes.js";
 import { registerServiceRoutes } from "./modules/services/routes.js";
+import { registerAiRoutes } from "./modules/ai/routes.js";
 
 const app = Fastify({ logger: true });
 registerErrorHandling(app);
@@ -43,6 +44,7 @@ await registerAuditRoutes(app);
 await registerTransportRoutes(app);
 await registerTransportPaymentRoutes(app);
 await registerServiceRoutes(app);
+await registerAiRoutes(app);
 
 const port = Number(process.env.API_PORT ?? 4000);
 await app.listen({ port, host: "0.0.0.0" });
