@@ -8,9 +8,12 @@ import { registerConsentRoutes } from "./modules/consent/routes.js";
 import { registerWorkflowRoutes } from "./modules/workflows/routes.js";
 import { registerAuditRoutes } from "./modules/audit/routes.js";
 import { registerErrorHandling } from "./plugins/errors.js";
+import { registerAuth } from "./plugins/auth.js";
+import { registerAuthRoutes } from "./modules/auth/routes.js";
 
 const app = Fastify({ logger: true });
 registerErrorHandling(app);
+await registerAuth(app);
 await app.register(helmet);
 await app.register(cors, {
   origin: process.env.CITIZEN_WEB_URL ?? "http://localhost:3000",
@@ -25,6 +28,7 @@ app.get("/v1", async () => ({
 }));
 
 await registerHealthRoutes(app);
+await registerAuthRoutes(app);
 await registerCitizenRoutes(app);
 await registerConsentRoutes(app);
 await registerWorkflowRoutes(app);
