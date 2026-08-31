@@ -16,6 +16,7 @@ enum PaymentStatus { CREATED PENDING CONFIRMED FAILED EXPIRED REFUNDED RECONCILI
 model User {
   id                String            @id @default(uuid()) @db.Uuid
   email             String?           @unique
+  passwordHash      String?
   displayName       String
   preferredLanguage String            @default("en")
   status            UserStatus        @default(ACTIVE)
@@ -26,6 +27,18 @@ model User {
   workflows         ServiceWorkflow[]
   payments          PaymentIntent[]
   auditEvents       AuditEvent[]
+  sessions          Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
 }
 
 model ConsentGrant {
