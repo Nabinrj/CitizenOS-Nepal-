@@ -1,6 +1,7 @@
 import { SERVICE_REGISTRY } from "../services/registry.js";
 import { discoverServices, type ServiceDiscoveryResult } from "./service-discovery.js";
 import { buildCitizenServiceContext, type CitizenServiceContext } from "./citizen-context.js";
+import { writeAuditEvent } from "../../lib/audit.js";
 
 export type AssistantResponse = {
   message: string;
@@ -27,17 +28,49 @@ export async function assistCitizen(message: string, userId?: string): Promise<A
 
   const service = SERVICE_REGISTRY.find((item) => item.code === top.serviceCode)!;
   const context = userId ? await buildCitizenServiceContext(userId, service) : undefined;
-  const missing = context?.requirements.filter((item) => item.state === "MISSING").map((item) => item.type) ?? [];
-  const expired = context?.requirements.filter((item) => item.state === "EXPIRED").map((item) => item.type) ?? [];
   const paymentText = service.paymentRequired ? " Payment may be required." : " No payment is currently configured.";
 
+  if (userId && context && !context.consentGranted) {
+    await writeAuditEvent({
+      actorType: "system",
+      actorId: "citizenos.ai",
+      userId,
+      action: "ai.context_access_denied",
+      resourceType: "credential_context",
+      resourceId: service.code,
+      purposeCode: "ai.personalized_guidance",
+      outcome: "denied"
+    });
+    return {
+      message: "The closest service is " + service.name.en + ". CitizenOS has not read your credential details because the required consent is not currently active. You can review the requirements and grant only the scopes needed for personalized guidance.",
+      matchedServices: matches.slice(0, 3),
+      context,
+      nextAction: "VIEW_REQUIREMENTS",
+      prototype: true,
+      disclaimer: "Your credential data was not used for personalized guidance because the required consent was not available."
+    };
+  }
+
+  if (userId && context) {
+    await writeAuditEvent({
+      actorType: "system",
+      actorId: "citizenos.ai",
+      userId,
+      action: "ai.context_accessed",
+      resourceType: "credential_context",
+      resourceId: service.code,
+      purposeCode: "ai.personalized_guidance",
+      outcome: "success"
+    });
+  }
+
+  const missing = context?.requirements.filter((item) => item.state === "MISSING").map((item) => item.type) ?? [];
+  const expired = context?.requirements.filter((item) => item.state === "EXPIRED").map((item) => item.type) ?? [];
   let messageText = "The closest CitizenOS service I found is " + service.name.en + " (" + service.name.ne + "), handled by " + service.authority + "." + paymentText;
   if (context) {
-    if (missing.length || expired.length) {
-      messageText += " Your current vault check found " + [...missing, ...expired].join(", ") + " that may need attention before you start.";
-    } else {
-      messageText += " Your current vault check found the required credential types available or otherwise present. This is not an official eligibility decision.";
-    }
+    messageText += missing.length || expired.length
+      ? " Your current vault check found " + [...missing, ...expired].join(", ") + " that may need attention before you start."
+      : " Your current vault check found the required credential types available or otherwise present. This is not an official eligibility decision.";
   }
 
   return {
