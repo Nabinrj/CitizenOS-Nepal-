@@ -74,16 +74,16 @@ model Credential {
 }
 
 model CredentialPresentation {
-  id             String   @id @default(uuid()) @db.Uuid
-  userId         String   @db.Uuid
-  referenceHash  String   @unique
-  purposeCode    String
-  credentialIds  Json
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @db.Uuid
+  referenceHash   String   @unique
+  purposeCode     String
+  credentialIds   Json
   disclosedFields Json
-  expiresAt      DateTime
-  consumedAt     DateTime?
-  createdAt      DateTime @default(now())
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt       DateTime
+  consumedAt      DateTime?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, expiresAt])
 }
 
@@ -103,7 +103,7 @@ model ServiceWorkflow {
 }
 
 model WorkflowEvent {
-  id         String          @id @default(uuid())
+  id         String          @id @default(uuid()) @db.Uuid
   workflowId String          @db.Uuid
   fromStatus WorkflowStatus?
   toStatus   WorkflowStatus
