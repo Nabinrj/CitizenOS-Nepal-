@@ -16,22 +16,16 @@ import { registerTransportRoutes } from "./modules/transport/routes.js";
 import { registerTransportPaymentRoutes } from "./modules/transport/payment-routes.js";
 import { registerServiceRoutes } from "./modules/services/routes.js";
 import { registerAiRoutes } from "./modules/ai/routes.js";
+import { registerAgencyRoutes } from "./modules/agency/routes.js";
 
 const app = Fastify({ logger: true });
 registerErrorHandling(app);
 await registerAuth(app);
 await app.register(helmet);
-await app.register(cors, {
-  origin: process.env.CITIZEN_WEB_URL ?? "http://localhost:3000",
-  credentials: true
-});
+await app.register(cors, { origin: process.env.CITIZEN_WEB_URL ?? "http://localhost:3000", credentials: true });
 await app.register(rateLimit, { max: 100, timeWindow: "1 minute" });
 
-app.get("/v1", async () => ({
-  name: "CitizenOS Nepal API",
-  version: "0.1.0",
-  status: "prototype"
-}));
+app.get("/v1", async () => ({ name: "CitizenOS Nepal API", version: "0.1.0", status: "prototype" }));
 
 await registerHealthRoutes(app);
 await registerAuthRoutes(app);
@@ -45,6 +39,7 @@ await registerTransportRoutes(app);
 await registerTransportPaymentRoutes(app);
 await registerServiceRoutes(app);
 await registerAiRoutes(app);
+await registerAgencyRoutes(app);
 
 const port = Number(process.env.API_PORT ?? 4000);
 await app.listen({ port, host: "0.0.0.0" });
