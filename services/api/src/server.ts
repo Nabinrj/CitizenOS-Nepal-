@@ -11,6 +11,7 @@ import { registerErrorHandling } from "./plugins/errors.js";
 import { registerAuth } from "./plugins/auth.js";
 import { registerAuthRoutes } from "./modules/auth/routes.js";
 import { registerCredentialRoutes } from "./modules/credentials/routes.js";
+import { registerPresentationRoutes } from "./modules/credentials/presentation-routes.js";
 import { registerVerificationRoutes } from "./modules/verification/routes.js";
 import { registerTransportRoutes } from "./modules/transport/routes.js";
 import { registerTransportPaymentRoutes } from "./modules/transport/payment-routes.js";
@@ -30,6 +31,7 @@ app.get("/v1", async () => ({ name: "CitizenOS Nepal API", version: "0.1.0", sta
 await registerHealthRoutes(app);
 await registerAuthRoutes(app);
 await registerCredentialRoutes(app);
+await registerPresentationRoutes(app);
 await registerVerificationRoutes(app);
 await registerCitizenRoutes(app);
 await registerConsentRoutes(app);
