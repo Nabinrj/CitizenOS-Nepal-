@@ -1,6 +1,7 @@
 import type { Credential } from "@prisma/client";
 import { CREDENTIAL_TYPES } from "./credential-types.js";
 import { resolveIssuerTrust } from "./trust-registry.js";
+import { verifyCryptographicProof } from "./proof-verifier.js";
 
 export type VerificationCheck = {
   code: string;
@@ -69,6 +70,13 @@ export function verifyCredential(credential: Credential): CredentialVerification
     message: `Credential status is ${credential.status}.`
   });
 
+  const proof = verifyCryptographicProof(credential);
+  checks.push({
+    code: "CRYPTOGRAPHIC_PROOF",
+    passed: proof.supported && proof.valid,
+    message: proof.message
+  });
+
   const isDemo = metadata.provenance === DEMO_PROVENANCE || metadata.environment === "demo";
   if (isDemo) return result("DEMO_ONLY", checks, now);
 
@@ -77,6 +85,7 @@ export function verifyCredential(credential: Credential): CredentialVerification
   if (credential.status === "SUSPENDED") return result("SUSPENDED", checks, now);
   if (!notExpired) return result("EXPIRED", checks, now);
   if (!issuerReferenced || !trustedIssuer) return result("UNTRUSTED_ISSUER", checks, now);
+  if (!proof.supported || !proof.valid) return result("UNSUPPORTED", checks, now);
   if (!active) return result("INVALID", checks, now);
 
   return result("VALID", checks, now);
